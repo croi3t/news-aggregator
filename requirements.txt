@@ -6,3 +6,4 @@ google-genai
 python-dotenv
 jinja2
 pydantic
+apscheduler

@@ -4,15 +4,27 @@ from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
-import os
 from dotenv import load_dotenv
 import database
 import notifier
+import worker
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import datetime
 
 # 環境変数の読み込み
 load_dotenv()
 
-app = FastAPI(title="News Aggregator")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler = BackgroundScheduler()
+    # 起動時にすぐ実行し、以降は1時間ごとに実行する
+    scheduler.add_job(worker.process_feeds, trigger='interval', hours=1, next_run_time=datetime.now())
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+app = FastAPI(title="News Aggregator", lifespan=lifespan)
 
 # 静的ファイルとテンプレートの設定
 # os.makedirs("static", exist_ok=True)
