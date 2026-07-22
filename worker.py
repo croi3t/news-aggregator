@@ -23,13 +23,17 @@ def process_feeds():
         print(f"\nProcessing feed: {feed_title} ({feed_url})")
         
         # 記事の取得
-        # 各フィードにつき最新5件までに制限（API制限回避のため）
-        articles = fetcher.fetch_feed_articles(feed_url, limit=5)
+        # 重複チェックの導入により無駄なAPI呼び出しを減らせるため、最新20件まで取得
+        articles = fetcher.fetch_feed_articles(feed_url, limit=20)
         
         for article in articles:
             title = article['title']
             url = article['link']
             published_at = article['published']
+            
+            # すでにデータベースに同じURLかタイトルの記事があれば、無駄なAI処理をスキップする
+            if database.article_exists(url, title):
+                continue
             
             # 記事の内容を取得（要約に使うため）
             content = ""
@@ -52,6 +56,10 @@ def process_feeds():
             
             summary = ai_result.get("summary", "要約の生成に失敗しました。")
             ai_category = ai_result.get("tag", feed_category) # 失敗時は元のカテゴリを使用
+            
+            # PubMedからの記事は強制的に「PubMed」タブにする
+            if "pubmed" in feed_url.lower():
+                ai_category = "PubMed"
             
             # DBに保存
             success = database.add_article(

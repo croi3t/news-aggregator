@@ -47,12 +47,12 @@ def seed_default_feeds():
     count = conn.execute('SELECT COUNT(*) FROM feeds').fetchone()[0]
     if count == 0:
         default_feeds = [
-            ("Yahoo! 政治", "https://news.yahoo.co.jp/rss/categories/domestic.xml", "政治"),
             ("Yahoo! 経済", "https://news.yahoo.co.jp/rss/topics/business.xml", "経済"),
             ("Yahoo! IT・テクノロジー", "https://news.yahoo.co.jp/rss/topics/it.xml", "IT"),
             ("Yahoo! 科学", "https://news.yahoo.co.jp/rss/topics/science.xml", "サイエンス"),
             ("Yahoo! ライフ (料理・健康)", "https://news.yahoo.co.jp/rss/topics/life.xml", "ライフスタイル"),
             ("Yahoo! エンタメ (アイドル等)", "https://news.yahoo.co.jp/rss/topics/entertainment.xml", "エンタメ"),
+            ("Google 検索 (グラビア)", "https://news.google.com/rss/search?q=グラビア&hl=ja&gl=JP&ceid=JP:ja", "グラビア"),
             ("4Gamer (ゲーム)", "https://www.4gamer.net/rss/index.xml", "ゲーム"),
             ("アニメ!アニメ!", "https://animeanime.jp/feed/", "アニメ"),
             ("arXiv 最新論文 (AI)", "https://rss.arxiv.org/rss/cs.AI", "論文"),
@@ -106,3 +106,9 @@ def add_article(feed_id, title, url, summary, category, published_at):
         return False
     finally:
         conn.close()
+
+def article_exists(url, title):
+    conn = get_db_connection()
+    count = conn.execute('SELECT COUNT(*) FROM articles WHERE url = ? OR title = ?', (url, title)).fetchone()[0]
+    conn.close()
+    return count > 0
