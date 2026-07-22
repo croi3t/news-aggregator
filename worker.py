@@ -60,6 +60,11 @@ def process_feeds():
             # PubMedからの記事は強制的に「PubMed」タブにする
             if "pubmed" in feed_url.lower():
                 ai_category = "PubMed"
+                
+            # 万が一APIの1分間制限に引っかかった場合、長めに待機して自動復旧させる
+            if ai_category == "Error" or summary == "要約の生成に失敗しました。":
+                print("    -> API limit reached or error. Sleeping for 20 seconds to recover...")
+                time.sleep(20)
             
             # DBに保存
             success = database.add_article(
