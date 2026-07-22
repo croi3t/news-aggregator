@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-container">
+            <h1>AI News Aggregator</h1>
+            <nav class="category-nav">
+                <button class="nav-btn active" data-category="All">All</button>
+                {% for cat in categories %}
+                <button class="nav-btn" data-category="{{ cat }}">{{ cat }}</button>
+                {% endfor %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="content-container">
+        <section class="feed-section">
+            <div class="section-header">
+                <h2>Latest Summaries</h2>
+                <button class="action-btn">+ Add Feed</button>
+            </div>
+
+            <div class="articles-grid">
+                {% for article in articles %}
+                <article class="article-card" data-category="{{ article.category }}">
+                    <div class="card-header">
+                        <span class="category-tag">{{ article.category }}</span>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <span class="publish-time">{{ article.published_at }}</span>
+                            <button class="archive-btn" data-title="{{ article.title }}" data-url="{{ article.url }}" data-summary="{{ article.summary }}" title="LINEに保存">💾</button>
+                        </div>
+                    </div>
+                    <h3 class="article-title">{{ article.title }}</h3>
+                    <p class="article-summary">{{ article.summary }}</p>
+                    <a href="{{ article.url }}" target="_blank" class="read-more-btn">Read Original</a>
+                </article>
+                {% else %}
+                <div class="empty-state">
+                    <p>No articles found. Add a feed to get started.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal -->
+    <div id="addFeedModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Add New Feed</h2>
+            <form id="addFeedForm">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="feedTitle" required placeholder="e.g. Tech Blog">
+                </div>
+                <div class="form-group">
+                    <label>RSS URL</label>
+                    <input type="url" id="feedUrl" required placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="feedCategory" required placeholder="e.g. IT">
+                </div>
+                <button type="submit" class="submit-btn">Add Feed</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Tabs
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const articleCards = document.querySelectorAll('.article-card');
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                navBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const selectedCategory = btn.getAttribute('data-category');
+
+                articleCards.forEach(card => {
+                    if (selectedCategory === 'All' || card.getAttribute('data-category') === selectedCategory) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // Expand Article
+        articleCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                if(e.target.tagName.toLowerCase() !== 'a') {
+                    card.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // Modal
+        const modal = document.getElementById("addFeedModal");
+        const addBtn = document.querySelector(".action-btn");
+        const closeBtn = document.querySelector(".close-btn");
+
+        addBtn.onclick = function() { modal.style.display = "flex"; }
+        closeBtn.onclick = function() { modal.style.display = "none"; }
+        window.onclick = function(event) { if (event.target == modal) { modal.style.display = "none"; } }
+
+        // Form Submit
+        document.getElementById("addFeedForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("feedTitle").value;
+            const url = document.getElementById("feedUrl").value;
+            const category = document.getElementById("feedCategory").value;
+
+            const res = await fetch("/add_feed", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, url, category })
+            });
+            
+            if (res.ok) {
+                alert("Feed added successfully!");
+                modal.style.display = "none";
+                location.reload();
+            } else {
+                alert("Failed to add feed. It might already exist.");
+            }
+        });
+
+        // Archive
+        const archiveBtns = document.querySelectorAll('.archive-btn');
+        archiveBtns.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation(); // カード展開イベントの伝播を防ぐ
+                const title = btn.getAttribute('data-title');
+                const url = btn.getAttribute('data-url');
+                const summary = btn.getAttribute('data-summary');
+                
+                const originalText = btn.innerText;
+                btn.innerText = "⏳";
+                
+                const res = await fetch("/archive", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, url, summary })
+                });
+                
+                if (res.ok) {
+                    btn.innerText = "✅";
+                } else {
+                    btn.innerText = "❌";
+                }
+                
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
