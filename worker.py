@@ -42,10 +42,12 @@ def process_feeds():
             if not content:
                 content = article.get('summary', '')
 
-            print(f"  - Summarizing: {title}")
+            # Windows環境等で特殊な文字（絵文字など）を表示しようとして強制終了するのを防ぐ
+            safe_title = title.encode('cp932', 'replace').decode('cp932')
+            print(f"  - Summarizing: {safe_title}")
             
-            # Gemini APIの無料枠制限（15回/分）を回避するため4.2秒待機
-            time.sleep(4.2)
+            # Gemini APIの無料枠制限（15回/分）を確実に回避するため5秒待機
+            time.sleep(5.0)
             ai_result = summarizer.summarize_text(title, content)
             
             summary = ai_result.get("summary", "要約の生成に失敗しました。")
