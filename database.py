@@ -55,7 +55,9 @@ def seed_default_feeds():
             ("Yahoo! エンタメ (アイドル等)", "https://news.yahoo.co.jp/rss/topics/entertainment.xml", "エンタメ"),
             ("4Gamer (ゲーム)", "https://www.4gamer.net/rss/index.xml", "ゲーム"),
             ("アニメ!アニメ!", "https://animeanime.jp/feed/", "アニメ"),
-            ("arXiv 最新論文 (AI)", "https://rss.arxiv.org/rss/cs.AI", "論文")
+            ("arXiv 最新論文 (AI)", "https://rss.arxiv.org/rss/cs.AI", "論文"),
+            ("PubMed (anticoagulant)", "https://pubmed.ncbi.nlm.nih.gov/rss/search/10QQLaXyfCADaHHBLgZETKm9TG3xydkYGNU2kLQ1SpdWhJe9Wa/?limit=15&utm_campaign=pubmed-2&fc=20260722064222", "論文"),
+            ("PubMed (renal function)", "https://pubmed.ncbi.nlm.nih.gov/rss/search/1Hme278Y-6c73hDWfuanuukLh1D0t53rXL-Nu25p4hYf9HIYpT/?limit=15&utm_campaign=pubmed-2&fc=20260722064533", "論文")
         ]
         cursor = conn.cursor()
         for title, url, category in default_feeds:
