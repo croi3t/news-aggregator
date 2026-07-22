@@ -2,6 +2,7 @@ import database
 import fetcher
 import summarizer
 import time
+import difflib
 
 def process_feeds():
     """登録されているすべてのフィードから記事を取得・要約してDBに保存するバッチ処理"""
@@ -13,6 +14,9 @@ def process_feeds():
     if not feeds:
         print("No feeds found. Please add feeds to the database.")
         return
+
+    # 類似記事チェック用に最近のタイトル一覧を取得
+    recent_titles = database.get_recent_titles(200)
 
     for feed in feeds:
         feed_id = feed['id']
@@ -34,6 +38,20 @@ def process_feeds():
             # すでにデータベースに同じURLかタイトルの記事があれば、無駄なAI処理をスキップする
             if database.article_exists(url, title):
                 continue
+                
+            # 類似タイトルの除外 (80%以上一致する場合はスキップ)
+            is_similar = False
+            for rt in recent_titles:
+                if difflib.SequenceMatcher(None, title, rt).ratio() > 0.8:
+                    is_similar = True
+                    break
+            
+            if is_similar:
+                print(f"  - Skipping similar article: {title.encode('cp932', 'replace').decode('cp932')}")
+                continue
+                
+            # この実行内で処理された記事も類似チェック対象に追加
+            recent_titles.append(title)
             
             # 記事の内容を取得（要約に使うため）
             content = ""

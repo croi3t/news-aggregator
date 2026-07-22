@@ -196,6 +196,7 @@ h2 {
     color: var(--text-secondary);
     font-size: 0.95rem;
     margin-bottom: 1.25rem;
+    white-space: pre-wrap;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -206,6 +207,7 @@ h2 {
 .article-card.expanded .article-summary {
     -webkit-line-clamp: unset;
     display: block;
+    overflow: visible;
 }
 
 .read-more-btn {

@@ -97,7 +97,7 @@ def add_article(feed_id, title, url, summary, category, published_at):
     try:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         conn.execute('''
-            INSERT INTO articles (feed_id, title, url, summary, category, published_at, created_at) 
+            INSERT OR REPLACE INTO articles (feed_id, title, url, summary, category, published_at, created_at) 
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (feed_id, title, url, summary, category, published_at, now))
         conn.commit()
@@ -109,6 +109,18 @@ def add_article(feed_id, title, url, summary, category, published_at):
 
 def article_exists(url, title):
     conn = get_db_connection()
-    count = conn.execute('SELECT COUNT(*) FROM articles WHERE url = ? OR title = ?', (url, title)).fetchone()[0]
+    row = conn.execute('SELECT summary, category FROM articles WHERE url = ? OR title = ?', (url, title)).fetchone()
     conn.close()
-    return count > 0
+    
+    if row:
+        # エラーだった記事の場合は未処理とみなして再処理（False）させる
+        if row['summary'] == '要約の生成に失敗しました。' or row['category'] == 'Error':
+            return False
+        return True
+    return False
+
+def get_recent_titles(limit=200):
+    conn = get_db_connection()
+    rows = conn.execute('SELECT title FROM articles ORDER BY published_at DESC LIMIT ?', (limit,)).fetchall()
+    conn.close()
+    return [row['title'] for row in rows]
