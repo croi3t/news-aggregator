@@ -35,9 +35,10 @@ def summarize_text(title: str, content: str) -> dict:
 """
 
     try:
+        # Geminiに送信して要約とタグを取得
         response = client.models.generate_content(
-            model='gemini-3.5-flash',
-            contents=prompt,
+            model='gemini-3.5-flash-lite',
+            contents=prompt
         )
         
         # 稀に ```json と ``` が付くことがあるので除去

@@ -23,6 +23,7 @@ def process_feeds():
         print(f"\nProcessing feed: {feed_title} ({feed_url})")
         
         # 記事の取得
+        # 各フィードにつき最新5件までに制限（API制限回避のため）
         articles = fetcher.fetch_feed_articles(feed_url, limit=5)
         
         for article in articles:
@@ -42,6 +43,9 @@ def process_feeds():
                 content = article.get('summary', '')
 
             print(f"  - Summarizing: {title}")
+            
+            # Gemini APIの無料枠制限（15回/分）を回避するため4.2秒待機
+            time.sleep(4.2)
             ai_result = summarizer.summarize_text(title, content)
             
             summary = ai_result.get("summary", "要約の生成に失敗しました。")
