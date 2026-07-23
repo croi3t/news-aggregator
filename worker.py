@@ -8,8 +8,9 @@ def process_feeds():
     """登録されているすべてのフィードから記事を取得・要約してDBに保存するバッチ処理"""
     print("=== Starting Feed Processing ===")
     
-    # DBからフィード一覧を取得
+    # DBからフィード一覧を取得し、PubMedを優先（先頭）にするようソート
     feeds = database.get_all_feeds()
+    feeds.sort(key=lambda x: "pubmed" not in x['url'].lower())
     
     if not feeds:
         print("No feeds found. Please add feeds to the database.")
@@ -17,6 +18,9 @@ def process_feeds():
 
     # 類似記事チェック用に最近のタイトル一覧を取得
     recent_titles = database.get_recent_titles(200)
+    
+    # 連続エラー回数のカウント用（API日次制限対策）
+    consecutive_errors = 0
 
     for feed in feeds:
         feed_id = feed['id']
@@ -68,21 +72,31 @@ def process_feeds():
             safe_title = title.encode('cp932', 'replace').decode('cp932')
             print(f"  - Summarizing: {safe_title}")
             
-            # Gemini APIの無料枠制限（15回/分）を確実に回避するため5秒待機
-            time.sleep(5.0)
-            ai_result = summarizer.summarize_text(title, content)
-            
-            summary = ai_result.get("summary", "要約の生成に失敗しました。")
-            ai_category = ai_result.get("tag", feed_category) # 失敗時は元のカテゴリを使用
-            
-            # PubMedからの記事は強制的に「PubMed」タブにする
-            if "pubmed" in feed_url.lower():
-                ai_category = "PubMed"
+            if consecutive_errors >= 3:
+                # 制限中（3回連続エラー）の場合はAIを使わずに高速保存
+                ai_category = "PubMed" if "pubmed" in feed_url.lower() else feed_category
+                raw_summary = (content[:150] + "...") if content else ""
+                summary = f"【要約なし（API制限中）】\n{raw_summary}"
+                print("    -> AI skipped due to API limits. Saved as raw text.")
+            else:
+                # Gemini APIの無料枠制限（15回/分）を確実に回避するため5秒待機
+                time.sleep(5.0)
+                ai_result = summarizer.summarize_text(title, content)
                 
-            # 万が一APIの1分間制限に引っかかった場合、長めに待機して自動復旧させる
-            if ai_category == "Error" or summary == "要約の生成に失敗しました。":
-                print("    -> API limit reached or error. Sleeping for 20 seconds to recover...")
-                time.sleep(20)
+                summary = ai_result.get("summary", "要約の生成に失敗しました。")
+                ai_category = ai_result.get("tag", feed_category) # 失敗時は元のカテゴリを使用
+                
+                # PubMedからの記事は強制的に「PubMed」タブにする
+                if "pubmed" in feed_url.lower():
+                    ai_category = "PubMed"
+                    
+                # 万が一APIの1分間制限に引っかかった場合、長めに待機して自動復旧させる
+                if ai_category == "Error" or summary == "要約の生成に失敗しました。":
+                    consecutive_errors += 1
+                    print(f"    -> API limit reached or error. Consecutive errors: {consecutive_errors}. Sleeping for 20 seconds...")
+                    time.sleep(20)
+                else:
+                    consecutive_errors = 0
             
             # DBに保存
             success = database.add_article(
