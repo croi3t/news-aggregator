@@ -47,6 +47,9 @@ def seed_default_feeds():
     count = conn.execute('SELECT COUNT(*) FROM feeds').fetchone()[0]
     if count == 0:
         default_feeds = [
+            ("Yahoo! 国内", "https://news.yahoo.co.jp/rss/topics/domestic.xml", "国内"),
+            ("Yahoo! 政治・国際", "https://news.yahoo.co.jp/rss/topics/world.xml", "国際"),
+            ("Yahoo! 地域", "https://news.yahoo.co.jp/rss/topics/local.xml", "地域"),
             ("Yahoo! 経済", "https://news.yahoo.co.jp/rss/topics/business.xml", "経済"),
             ("Yahoo! IT・テクノロジー", "https://news.yahoo.co.jp/rss/topics/it.xml", "IT"),
             ("Yahoo! 科学", "https://news.yahoo.co.jp/rss/topics/science.xml", "サイエンス"),
@@ -88,7 +91,7 @@ def add_feed(title, url, category):
     finally:
         conn.close()
 
-def get_recent_articles(limit=50):
+def get_recent_articles(limit=200):
     conn = get_db_connection()
     articles = conn.execute('SELECT * FROM articles ORDER BY published_at DESC LIMIT ?', (limit,)).fetchall()
     conn.close()

@@ -60,7 +60,7 @@ async def api_archive(req: ArchiveRequest):
 async def read_root(request: Request):
     # DBからフィードと記事を取得
     feeds = database.get_all_feeds()
-    articles = database.get_recent_articles(limit=50)
+    articles = database.get_recent_articles(limit=200)
     # 記事に付与されたAIタグ一覧を取得
     categories = list(set([a['category'] for a in articles]))
     

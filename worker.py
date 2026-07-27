@@ -26,8 +26,8 @@ def process_feeds():
         print(f"\nProcessing feed: {feed_title} ({feed_url})")
         
         # 記事の取得
-        # 重複チェックの導入により無駄なAPI呼び出しを減らせるため、最新20件まで取得
-        articles = fetcher.fetch_feed_articles(feed_url, limit=20)
+        # 取得件数を大幅に引き上げ（最大50件）
+        articles = fetcher.fetch_feed_articles(feed_url, limit=50)
         
         for article in articles:
             title = article['title']
