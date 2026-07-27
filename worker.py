@@ -1,7 +1,5 @@
 import database
 import fetcher
-import summarizer
-import time
 import difflib
 
 def process_feeds():
@@ -18,9 +16,6 @@ def process_feeds():
 
     # 類似記事チェック用に最近のタイトル一覧を取得
     recent_titles = database.get_recent_titles(200)
-    
-    # 連続エラー回数のカウント用（API日次制限対策）
-    consecutive_errors = 0
 
     for feed in feeds:
         feed_id = feed['id']
@@ -70,33 +65,13 @@ def process_feeds():
 
             # Windows環境等で特殊な文字（絵文字など）を表示しようとして強制終了するのを防ぐ
             safe_title = title.encode('cp932', 'replace').decode('cp932')
-            print(f"  - Summarizing: {safe_title}")
+            print(f"  - Saving: {safe_title}")
             
-            if consecutive_errors >= 3:
-                # 制限中（3回連続エラー）の場合はAIを使わずに高速保存
-                ai_category = "PubMed" if "pubmed" in feed_url.lower() else feed_category
-                raw_summary = (content[:150] + "...") if content else ""
-                summary = f"【要約なし（API制限中）】\n{raw_summary}"
-                print("    -> AI skipped due to API limits. Saved as raw text.")
-            else:
-                # Gemini APIの無料枠制限（15回/分）を確実に回避するため5秒待機
-                time.sleep(5.0)
-                ai_result = summarizer.summarize_text(title, content)
-                
-                summary = ai_result.get("summary", "要約の生成に失敗しました。")
-                ai_category = ai_result.get("tag", feed_category) # 失敗時は元のカテゴリを使用
-                
-                # PubMedからの記事は強制的に「PubMed」タブにする
-                if "pubmed" in feed_url.lower():
-                    ai_category = "PubMed"
-                    
-                # 万が一APIの1分間制限に引っかかった場合、長めに待機して自動復旧させる
-                if ai_category == "Error" or summary == "要約の生成に失敗しました。":
-                    consecutive_errors += 1
-                    print(f"    -> API limit reached or error. Consecutive errors: {consecutive_errors}. Sleeping for 20 seconds...")
-                    time.sleep(20)
-                else:
-                    consecutive_errors = 0
+            # AIは使用せず、元のテキストをそのまま保存して超高速化する
+            ai_category = "PubMed" if "pubmed" in feed_url.lower() else feed_category
+            # 本文があれば冒頭300文字を抽出。改行もそのまま保持させる。
+            raw_summary = (content[:300] + "...") if content else "（本文がありません）"
+            summary = raw_summary
             
             # DBに保存
             success = database.add_article(
@@ -112,9 +87,6 @@ def process_feeds():
                 print(f"    -> Saved successfully.")
             else:
                 print(f"    -> Already exists or error.")
-                
-            # APIのレートリミット対策で少し待機
-            time.sleep(2)
 
     print("=== Feed Processing Finished ===")
 
