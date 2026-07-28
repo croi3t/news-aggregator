@@ -59,6 +59,7 @@ def seed_default_feeds():
             ("Google 検索 (旅行・観光)", "https://news.google.com/rss/search?q=%E6%97%85%E8%A1%8C+OR+%E8%A6%B3%E5%85%89&hl=ja&gl=JP&ceid=JP:ja", "旅行"),
             ("Google 検索 (音楽)", "https://news.google.com/rss/search?q=%E9%9F%B3%E6%A5%BD&hl=ja&gl=JP&ceid=JP:ja", "音楽"),
             ("Google 検索 (ゲーム セール情報)", "https://news.google.com/rss/search?q=%E3%82%B2%E3%83%BC%E3%83%A0+%E3%82%BB%E3%83%BC%E3%83%AB&hl=ja&gl=JP&ceid=JP:ja", "ゲームセール"),
+            ("Google 検索 (新薬承認)", "https://news.google.com/rss/search?q=%E6%96%B0%E8%96%AC+%E6%89%BF%E8%AA%8D&hl=ja&gl=JP&ceid=JP:ja", "新薬"),
             ("Google 検索 (グラビア)", "https://news.google.com/rss/search?q=グラビア&hl=ja&gl=JP&ceid=JP:ja", "グラビア"),
             ("4Gamer (ゲーム)", "https://www.4gamer.net/rss/index.xml", "ゲーム"),
             ("アニメ!アニメ!", "https://animeanime.jp/feed/", "アニメ"),
