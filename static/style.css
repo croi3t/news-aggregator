@@ -52,13 +52,9 @@ h1 {
 
 .category-nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    overflow-x: auto;
     padding-bottom: 0.5rem;
-    scrollbar-width: none;
-}
-.category-nav::-webkit-scrollbar {
-    display: none;
 }
 
 .nav-btn {
