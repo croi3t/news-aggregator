@@ -93,6 +93,9 @@
                         card.style.display = 'none';
                     }
                 });
+                
+                // タブ切り替え時にページの一番上へスクロールする
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
 
