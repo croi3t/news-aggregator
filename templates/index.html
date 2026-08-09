@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=3">
+    <link rel="stylesheet" href="/static/style.css?v=4">
 </head>
 <body>
     <header class="app-header">
@@ -15,6 +15,7 @@
             <h1>AI News Aggregator</h1>
             <nav class="category-nav">
                 <button class="nav-btn active" data-category="All">All</button>
+                <button class="nav-btn" data-category="Bookmark">★ Bookmark</button>
                 {% for cat in categories %}
                 <button class="nav-btn" data-category="{{ cat }}">{{ cat }}</button>
                 {% endfor %}
@@ -36,6 +37,7 @@
                         <span class="category-tag">{{ article.category }}</span>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <span class="publish-time">{{ article.published_at }}</span>
+                            <button class="bookmark-btn" data-url="{{ article.url }}" title="ブックマーク">☆</button>
                             <button class="archive-btn" data-title="{{ article.title }}" data-url="{{ article.url }}" data-summary="{{ article.summary }}" title="LINEに保存">💾</button>
                         </div>
                     </div>
@@ -76,9 +78,24 @@
     </div>
 
     <script>
+        // LocalStorage initialization
+        let readArticles = JSON.parse(localStorage.getItem('readArticles') || '[]');
+        let bookmarkedArticles = JSON.parse(localStorage.getItem('bookmarkedArticles') || '[]');
+
+        // Initialize UI state based on LocalStorage
+        articleCards.forEach(card => {
+            const url = card.querySelector('.archive-btn').getAttribute('data-url');
+            if (readArticles.includes(url)) {
+                card.classList.add('read');
+            }
+            if (bookmarkedArticles.includes(url)) {
+                card.classList.add('bookmarked');
+                card.querySelector('.bookmark-btn').innerText = '★';
+            }
+        });
+
         // Tabs
         const navBtns = document.querySelectorAll('.nav-btn');
-        const articleCards = document.querySelectorAll('.article-card');
 
         navBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -87,7 +104,11 @@
                 const selectedCategory = btn.getAttribute('data-category');
 
                 articleCards.forEach(card => {
-                    if (selectedCategory === 'All' || card.getAttribute('data-category') === selectedCategory) {
+                    if (selectedCategory === 'All') {
+                        card.style.display = 'block';
+                    } else if (selectedCategory === 'Bookmark') {
+                        card.style.display = card.classList.contains('bookmarked') ? 'block' : 'none';
+                    } else if (card.getAttribute('data-category') === selectedCategory) {
                         card.style.display = 'block';
                     } else {
                         card.style.display = 'none';
@@ -99,11 +120,49 @@
             });
         });
 
-        // Expand Article
+        // Expand Article and Mark as Read
         articleCards.forEach(card => {
             card.addEventListener('click', (e) => {
-                if(e.target.tagName.toLowerCase() !== 'a') {
+                // ボタンやリンクのクリックは無視
+                if(e.target.tagName.toLowerCase() !== 'a' && !e.target.classList.contains('archive-btn') && !e.target.classList.contains('bookmark-btn')) {
                     card.classList.toggle('expanded');
+                    
+                    // Mark as read
+                    const url = card.querySelector('.archive-btn').getAttribute('data-url');
+                    if (!readArticles.includes(url)) {
+                        readArticles.push(url);
+                        localStorage.setItem('readArticles', JSON.stringify(readArticles));
+                        card.classList.add('read');
+                    }
+                }
+            });
+        });
+
+        // Bookmark toggle
+        const bookmarkBtns = document.querySelectorAll('.bookmark-btn');
+        bookmarkBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.article-card');
+                const url = btn.getAttribute('data-url');
+                
+                if (bookmarkedArticles.includes(url)) {
+                    // Remove bookmark
+                    bookmarkedArticles = bookmarkedArticles.filter(u => u !== url);
+                    btn.innerText = '☆';
+                    card.classList.remove('bookmarked');
+                } else {
+                    // Add bookmark
+                    bookmarkedArticles.push(url);
+                    btn.innerText = '★';
+                    card.classList.add('bookmarked');
+                }
+                localStorage.setItem('bookmarkedArticles', JSON.stringify(bookmarkedArticles));
+                
+                // If currently in Bookmark tab, hide it immediately when unbookmarked
+                const activeTab = document.querySelector('.nav-btn.active').getAttribute('data-category');
+                if (activeTab === 'Bookmark' && !card.classList.contains('bookmarked')) {
+                    card.style.display = 'none';
                 }
             });
         });
