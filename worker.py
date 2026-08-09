@@ -69,8 +69,14 @@ def process_feeds():
             
             # AIは使用せず、元のテキストをそのまま保存して超高速化する
             ai_category = "PubMed" if "pubmed" in feed_url.lower() else feed_category
-            # 本文があれば冒頭300文字を抽出。改行もそのまま保持させる。
-            raw_summary = (content[:300] + "...") if content else "（本文がありません）"
+            
+            # PubMedの場合は文字制限を解除し全文保存
+            if "pubmed" in feed_url.lower():
+                raw_summary = content if content else "（本文がありません）"
+            else:
+                # PubMed以外は冒頭300文字を抽出。改行もそのまま保持させる。
+                raw_summary = (content[:300] + "...") if content else "（本文がありません）"
+                
             summary = raw_summary
             
             # DBに保存
