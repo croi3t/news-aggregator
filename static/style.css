@@ -138,6 +138,16 @@ h2 {
     border-color: rgba(59, 130, 246, 0.3);
 }
 
+.article-card.read {
+    opacity: 0.6;
+    filter: grayscale(0.5);
+}
+
+.article-card.read:hover {
+    opacity: 0.9;
+    filter: grayscale(0);
+}
+
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -161,7 +171,7 @@ h2 {
     font-size: 0.8rem;
 }
 
-.archive-btn {
+.archive-btn, .bookmark-btn {
     background: transparent;
     border: none;
     cursor: pointer;
@@ -171,14 +181,15 @@ h2 {
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.archive-btn:hover {
+.archive-btn:hover, .bookmark-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
     transform: scale(1.1);
 }
 
-.archive-btn:active {
+.archive-btn:active, .bookmark-btn:active {
     transform: scale(0.95);
 }
+
 
 .article-title {
     font-size: 1.125rem;
@@ -203,7 +214,20 @@ h2 {
 .article-card.expanded .article-summary {
     -webkit-line-clamp: unset;
     display: block;
-    overflow: visible;
+    overflow-y: auto;
+    max-height: 400px;
+    padding-right: 10px;
+}
+.article-card.expanded .article-summary::-webkit-scrollbar {
+    width: 6px;
+}
+.article-card.expanded .article-summary::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+.article-card.expanded .article-summary::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
 }
 
 .read-more-btn {
