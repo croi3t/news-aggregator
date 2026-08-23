@@ -56,6 +56,10 @@ async def api_archive(req: ArchiveRequest):
     notifier.send_line_message(message)
     return JSONResponse(content={"status": "success", "message": "Archived to LINE"})
 
+@app.get("/status")
+async def api_status():
+    return JSONResponse(content={"is_processing": getattr(worker, 'is_processing', False)})
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     # DBからフィードと記事を取得

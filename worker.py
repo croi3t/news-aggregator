@@ -2,9 +2,18 @@ import database
 import fetcher
 import difflib
 
+is_processing = False
+
 def process_feeds():
-    """登録されているすべてのフィードから記事を取得・要約してDBに保存するバッチ処理"""
-    print("=== Starting Feed Processing ===")
+    global is_processing
+    if is_processing:
+        print("=== Already processing feeds, skipping ===")
+        return
+        
+    is_processing = True
+    try:
+        """登録されているすべてのフィードから記事を取得・要約してDBに保存するバッチ処理"""
+        print("=== Starting Feed Processing ===")
     
     # DBからフィード一覧を取得し、PubMedを優先（先頭）にするようソート
     feeds = database.get_all_feeds()
@@ -74,8 +83,8 @@ def process_feeds():
             if "pubmed" in feed_url.lower():
                 raw_summary = content if content else "（本文がありません）"
             else:
-                # PubMed以外は冒頭300文字を抽出。改行もそのまま保持させる。
-                raw_summary = (content[:300] + "...") if content else "（本文がありません）"
+                # PubMed以外は冒頭1000文字を抽出。改行もそのまま保持させる。
+                raw_summary = (content[:1000] + "...") if content else "（本文がありません）"
                 
             summary = raw_summary
             
@@ -95,6 +104,9 @@ def process_feeds():
                 print(f"    -> Already exists or error.")
 
     print("=== Feed Processing Finished ===")
+
+    finally:
+        is_processing = False
 
 if __name__ == "__main__":
     # テストとして、DBに1件フィードがなければ追加して実行する
