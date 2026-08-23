@@ -7,13 +7,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css?v=4">
+    <link rel="stylesheet" href="/static/style.css?v=6">
 </head>
 <body>
     <header class="app-header">
         <div class="header-container">
-            <h1>AI News Aggregator</h1>
-            <nav class="category-nav">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h1 style="margin-bottom: 0;">AI News Aggregator</h1>
+                <button id="toggle-nav-btn" class="action-btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">📂 タブ一覧 ▼</button>
+            </div>
+            <nav class="category-nav collapsed" id="categoryNav">
                 <button class="nav-btn active" data-category="All">All</button>
                 <button class="nav-btn" data-category="Bookmark">★ Bookmark</button>
                 {% for cat in categories %}
@@ -94,8 +97,19 @@
             }
         });
 
-        // Tabs
+        // Tabs and Collapse Toggle
         const navBtns = document.querySelectorAll('.nav-btn');
+        const toggleNavBtn = document.getElementById('toggle-nav-btn');
+        const categoryNav = document.getElementById('categoryNav');
+        
+        toggleNavBtn.addEventListener('click', () => {
+            categoryNav.classList.toggle('collapsed');
+            if (categoryNav.classList.contains('collapsed')) {
+                toggleNavBtn.innerText = '📂 タブ一覧 ▼';
+            } else {
+                toggleNavBtn.innerText = '📂 タブ一覧 ▲';
+            }
+        });
 
         navBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -117,6 +131,10 @@
                 
                 // タブ切り替え時にページの一番上へスクロールする
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // モバイル向けに選択後は折り畳む
+                categoryNav.classList.add('collapsed');
+                toggleNavBtn.innerText = '📂 タブ一覧 ▼';
             });
         });
 
@@ -227,6 +245,34 @@
                 }, 2000);
             });
         });
+        
+        // Sync Status Checker
+        let wasProcessing = false;
+        const syncStatus = document.createElement('div');
+        syncStatus.id = 'sync-status';
+        syncStatus.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: var(--accent-color); color: white; padding: 10px 20px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none; z-index: 1000; font-size: 0.9rem; transition: all 0.3s ease;';
+        document.body.appendChild(syncStatus);
+
+        setInterval(async () => {
+            try {
+                const res = await fetch('/status');
+                const data = await res.json();
+                if (data.is_processing) {
+                    syncStatus.style.display = 'block';
+                    syncStatus.innerText = '🔄 ニュースを収集中...';
+                    syncStatus.style.cursor = 'default';
+                    syncStatus.style.backgroundColor = 'var(--accent-color)';
+                    syncStatus.onclick = null;
+                    wasProcessing = true;
+                } else if (wasProcessing && !data.is_processing) {
+                    syncStatus.innerText = '✅ 新しいニュースが届きました！（クリックして更新）';
+                    syncStatus.style.cursor = 'pointer';
+                    syncStatus.style.backgroundColor = '#10b981'; // green
+                    syncStatus.onclick = () => location.reload();
+                    wasProcessing = false;
+                }
+            } catch(e) {}
+        }, 3000);
     </script>
 </body>
 </html>
