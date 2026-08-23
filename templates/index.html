@@ -86,6 +86,7 @@
         let bookmarkedArticles = JSON.parse(localStorage.getItem('bookmarkedArticles') || '[]');
 
         // Initialize UI state based on LocalStorage
+        const articleCards = document.querySelectorAll('.article-card');
         articleCards.forEach(card => {
             const url = card.querySelector('.archive-btn').getAttribute('data-url');
             if (readArticles.includes(url)) {
